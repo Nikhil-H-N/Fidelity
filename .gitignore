@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python models / heavy files
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.bin
+*.h5
+*.pkl
+
+# Frontend (finova-wealth)
+finova-wealth/node_modules/
+finova-wealth/.next/
+finova-wealth/dist/
+finova-wealth/build/
+finova-wealth/.vercel/
+
+# Admin portal frontend
+admin-portal/node_modules/
+admin-portal/.next/
+admin-portal/dist/
+admin-portal/build/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Cache
+.cache/
