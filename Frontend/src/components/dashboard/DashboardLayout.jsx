@@ -31,7 +31,6 @@ const navItems = [
   ]},
 
   { section: 'Other', items: [
-    { name: 'AI Insights', icon: Brain, path: '/ai-recommendations' },
     { name: 'Beginner Guides', icon: HelpCircle, path: '/beginner-guides' },
     { name: 'Notifications', icon: Bell, path: '/notifications' },
     { name: 'Settings', icon: Settings, path: '/profile' },

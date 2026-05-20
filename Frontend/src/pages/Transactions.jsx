@@ -4,6 +4,8 @@ import { ArrowLeftRight, Download, Filter } from 'lucide-react';
 import { transactions } from '../data/mockData';
 import { formatCurrency, formatDate, getStatusColor } from '../utils/formatters';
 import { usePageTracking } from '../hooks/useTracking';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function Transactions() {
   usePageTracking('transactions');
@@ -11,11 +13,70 @@ export default function Transactions() {
   const types = ['All', 'SIP', 'Lumpsum', 'Withdrawal'];
   const filtered = filter === 'All' ? transactions : transactions.filter(t => t.type === filter);
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(30, 41, 59);
+    doc.text('FinovaWealth — Transaction Statement', 14, 20);
+
+    // Date
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 28);
+    doc.text(`Filter: ${filter}`, 14, 34);
+
+    // Table
+    autoTable(doc, {
+      startY: 42,
+      head: [['Date', 'Type', 'Fund', 'Amount', 'Units', 'Status']],
+      body: filtered.map(t => [
+        formatDate(t.date),
+        t.type,
+        t.fund,
+        `${t.type === 'Withdrawal' ? '-' : '+'} Rs. ${new Intl.NumberFormat('en-IN').format(t.amount)}`,
+        `${t.units > 0 ? '+' : ''}${t.units.toFixed(2)}`,
+        t.status,
+      ]),
+      headStyles: {
+        fillColor: [59, 130, 246],
+        textColor: 255,
+        fontSize: 9,
+        fontStyle: 'bold',
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: [30, 41, 59],
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(
+        `FinovaWealth · Page ${i} of ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+
+    doc.save(`FinovaWealth_Transactions_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div><h1 className="text-2xl font-bold text-surface-900">Transactions</h1><p className="text-surface-500 text-sm mt-1">Your investment transaction history</p></div>
-        <button className="btn-secondary text-sm py-2 px-4 gap-2"><Download className="w-4 h-4" /> Export</button>
+        <button onClick={handleExportPDF} className="btn-secondary text-sm py-2 px-4 gap-2"><Download className="w-4 h-4" /> Export PDF</button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">{types.map(t => (

@@ -291,6 +291,8 @@ export const useInteractionTracking = () => {
   const markActive = useCallback(() => {
     lastActivity.current = Date.now();
     idleReported.current = false;
+    // Notify AuthContext of activity
+    localStorage.setItem("fw_lastActivityAt", String(Date.now()));
   }, []);
 
   const reportIdle = useCallback(() => {

@@ -172,6 +172,7 @@ export default function ApplicationForm() {
       state: {
         product: product.title,
         amount: Number(form.amount),
+        applicationData: form
       },
     });
   };

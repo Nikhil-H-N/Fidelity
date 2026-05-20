@@ -45,6 +45,7 @@ router.get("/me", protect, async (req, res) => {
         id: req.user._id,
         fullName: req.user.fullName,
         email: req.user.email,
+        phone: req.user.phone,
         role: req.user.role,
         isVerified: req.user.isVerified,
         authProvider: req.user.authProvider,

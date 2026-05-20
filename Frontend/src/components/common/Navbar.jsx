@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, Bell, User, TrendingUp, Shield } from 'lucide-react';
 import useStore from '../../store/useStore';
+import { useAuth } from '../../context/AuthContext';
 
 const navLinks = [
   { name: 'Invest', href: '/invest', children: [
@@ -36,6 +37,7 @@ export default function Navbar() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const location = useLocation();
   const { unreadCount } = useStore();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -94,23 +96,31 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-surface-50 transition-colors">
-              <Bell className="w-5 h-5 text-surface-500" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </Link>
-            <Link to="/profile" className="p-2 rounded-lg hover:bg-surface-50 transition-colors">
-              <User className="w-5 h-5 text-surface-500" />
-            </Link>
-            <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} className="text-sm py-2 px-4 font-medium text-surface-500 hover:text-surface-900 transition-colors flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" />
-              Admin
-            </a>
-            <Link to="/login" className="btn-secondary text-sm py-2 px-4">Log In</Link>
-            <Link to="/signup" className="btn-primary text-sm py-2 px-4">Get Started</Link>
+            {user ? (
+              <>
+                <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-surface-50 transition-colors">
+                  <Bell className="w-5 h-5 text-surface-500" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/profile" className="p-2 rounded-lg hover:bg-surface-50 transition-colors">
+                  <User className="w-5 h-5 text-surface-500" />
+                </Link>
+                <Link to="/dashboard" className="btn-primary text-sm py-2 px-4">Dashboard</Link>
+              </>
+            ) : (
+              <>
+                <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} className="text-sm py-2 px-4 font-medium text-surface-500 hover:text-surface-900 transition-colors flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5" />
+                  Admin
+                </a>
+                <Link to="/login" className="btn-secondary text-sm py-2 px-4">Log In</Link>
+                <Link to="/signup" className="btn-primary text-sm py-2 px-4">Get Started</Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Toggle */}
@@ -139,14 +149,20 @@ export default function Navbar() {
                 </div>
               ))}
               <div className="pt-4 space-y-2">
-                <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} className="flex items-center justify-center gap-1.5 text-sm py-2.5 text-surface-500 hover:text-surface-900 border border-surface-200 rounded-xl font-medium">
-                  <Shield className="w-3.5 h-3.5" />
-                  Admin Login
-                </a>
-                <div className="flex gap-3">
-                  <Link to="/login" className="btn-secondary flex-1 text-sm py-2.5">Log In</Link>
-                  <Link to="/signup" className="btn-primary flex-1 text-sm py-2.5">Get Started</Link>
-                </div>
+                {user ? (
+                  <Link to="/dashboard" className="btn-primary w-full text-center text-sm py-2.5 block">Go to Dashboard</Link>
+                ) : (
+                  <>
+                    <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} className="flex items-center justify-center gap-1.5 text-sm py-2.5 text-surface-500 hover:text-surface-900 border border-surface-200 rounded-xl font-medium">
+                      <Shield className="w-3.5 h-3.5" />
+                      Admin Login
+                    </a>
+                    <div className="flex gap-3">
+                      <Link to="/login" className="btn-secondary flex-1 text-sm py-2.5">Log In</Link>
+                      <Link to="/signup" className="btn-primary flex-1 text-sm py-2.5">Get Started</Link>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

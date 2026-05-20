@@ -17,6 +17,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getMe } from "../api/authService";
 import useStore from "../store/useStore";
+import toast from "react-hot-toast";
 import { clearAuthIdentity, resetTrackingIdentity } from "../utils/authStorage";
 
 const AuthContext = createContext(null);
@@ -153,18 +154,12 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token || !user || window.location.search.includes("adminPreview=true")) return;
 
-    let lastWrite = 0;
-    const markActivity = () => {
-      const now = Date.now();
-      if (now - lastWrite < 15000) return;
-      lastWrite = now;
-      localStorage.setItem("fw_lastActivityAt", String(now));
-    };
-
     const enforceExpiry = () => {
       const lastActivityAt = Number(localStorage.getItem("fw_lastActivityAt") || Date.now());
       if (Date.now() - lastActivityAt >= AUTH_ACTIVITY_TIMEOUT_MS) {
         logout();
+        toast("Session expired due to inactivity", { icon: "⏳" });
+        window.dispatchEvent(new CustomEvent("finova:auth-expired"));
       }
     };
 
@@ -172,22 +167,26 @@ export function AuthProvider({ children }) {
       localStorage.setItem("fw_lastActivityAt", String(Date.now()));
     }
 
-    ACTIVITY_EVENTS.forEach((eventName) => {
-      window.addEventListener(eventName, markActivity, { passive: true });
-    });
-    const interval = setInterval(enforceExpiry, 60 * 1000);
+    // Check expiry every 5 seconds for fast reaction
+    const interval = setInterval(enforceExpiry, 5000);
+    
+    // Also check immediately when tab becomes visible again
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') enforceExpiry();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     enforceExpiry();
 
     return () => {
-      ACTIVITY_EVENTS.forEach((eventName) => {
-        window.removeEventListener(eventName, markActivity);
-      });
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [token, user, logout]);
 
   const value = {
     user,
+    setUser,
     token,
     loading,
     isAuthenticated: !!token && !!user,

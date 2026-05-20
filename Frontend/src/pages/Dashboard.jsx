@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Wallet, PieChart, Target, ArrowUpRight, BarChart3, Bell, Brain, Activity } from 'lucide-react';
 import { KPICard, AnimatedCounter, ProgressBar } from '../components/common/UIComponents';
-import { portfolioSummary, portfolioAllocation, portfolioPerformance, activeSIPs, goals, notifications, aiRecommendations } from '../data/mockData';
+import { portfolioSummary, portfolioAllocation, portfolioPerformance, goals, notifications, aiRecommendations } from '../data/mockData';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RPieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
 import { usePageTracking } from '../hooks/useTracking';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -23,6 +24,21 @@ function getFirstName(name) {
 export default function Dashboard() {
   usePageTracking('dashboard');
   const { user } = useAuth();
+
+  const [mySIPs, setMySIPs] = useState([]);
+  
+  useEffect(() => {
+    try {
+      const sips = JSON.parse(localStorage.getItem('finova_active_sips')) || [];
+      setMySIPs(sips);
+    } catch {
+      setMySIPs([]);
+    }
+  }, []);
+
+  const activeSipsCount = mySIPs.length;
+  const totalSipAmount = mySIPs.reduce((s, sip) => s + Number(sip.amount), 0);
+  const formattedSipChange = `₹${totalSipAmount.toLocaleString('en-IN')}/mo`;
 
   return (
     <div className="space-y-6">
@@ -41,7 +57,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard icon={Wallet} label="Total Portfolio" value={formatCurrency(portfolioSummary.totalValue, true)} change={`${formatPercent(portfolioSummary.todayChangePercent)}`} changeType="positive" />
         <KPICard icon={TrendingUp} label="Total Returns" value={formatCurrency(portfolioSummary.totalReturns, true)} change={`${formatPercent(portfolioSummary.returnPercent)}`} changeType="positive" />
-        <KPICard icon={BarChart3} label="Active SIPs" value="5" change="₹25,000/mo" changeType="neutral" />
+        <KPICard icon={BarChart3} label="Active SIPs" value={activeSipsCount.toString()} change={formattedSipChange} changeType="neutral" />
         <KPICard icon={Target} label="Goals On Track" value="4/5" change="80%" changeType="positive" />
       </div>
 
@@ -107,18 +123,25 @@ export default function Dashboard() {
             <Link to="/sip-plans" className="text-sm text-primary-600 font-medium hover:text-primary-700">View all →</Link>
           </div>
           <div className="space-y-3">
-            {activeSIPs.slice(0, 4).map(sip => (
-              <div key={sip.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-50 hover:bg-surface-100 transition-colors">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-surface-900 truncate">{sip.name}</p>
-                  <p className="text-xs text-surface-500">{sip.category} · {sip.date} every month</p>
-                </div>
-                <div className="text-right ml-3">
-                  <p className="text-sm font-semibold text-surface-900">₹{sip.amount.toLocaleString('en-IN')}</p>
-                  <p className="text-xs text-accent-600 font-medium">+{sip.returns}%</p>
-                </div>
+            {mySIPs.length === 0 ? (
+              <div className="text-center p-6 bg-surface-50 rounded-xl border border-surface-100">
+                <p className="text-sm font-medium text-surface-600">No active SIPs</p>
+                <Link to="/sip-plans" className="text-xs font-bold text-primary-600 mt-2 inline-block">Start your first SIP</Link>
               </div>
-            ))}
+            ) : (
+              mySIPs.slice(0, 4).map(sip => (
+                <div key={sip.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-50 hover:bg-surface-100 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-surface-900 truncate">{sip.name}</p>
+                    <p className="text-xs text-surface-500">{sip.category} · {sip.date} every month</p>
+                  </div>
+                  <div className="text-right ml-3">
+                    <p className="text-sm font-semibold text-surface-900">₹{Number(sip.amount).toLocaleString('en-IN')}</p>
+                    <p className="text-xs text-accent-600 font-medium">+{sip.returns}%</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

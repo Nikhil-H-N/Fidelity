@@ -12,7 +12,7 @@ const overlay = { hidden: { opacity: 0 }, visible: { opacity: 1 }, exit: { opaci
 const modal = { hidden: { opacity: 0, scale: 0.92, y: 30 }, visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 300 } }, exit: { opacity: 0, scale: 0.92, y: 30 } };
 const REQUIRED = ['sipAmount', 'sipDate', 'frequency', 'duration', 'selectedFund', 'bankAccount', 'upiId'];
 
-export default function SIPCreationModal({ isOpen, onClose }) {
+export default function SIPCreationModal({ isOpen, onClose, onCreated }) {
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -25,6 +25,8 @@ export default function SIPCreationModal({ isOpen, onClose }) {
     sipAmount: 5000, sipDate: '5', frequency: 'monthly', duration: 5,
     expectedReturn: 12, selectedFund: '', bankAccount: '', upiId: '', autoDebit: true,
   });
+
+  const fmt = (v) => `₹${v.toLocaleString('en-IN')}`;
 
   useEffect(() => {
     if (isOpen) { trackFormStart(); startTime.current = Date.now(); queueEvent({ eventType: 'modal_open', page: '/sip-plans', formType: 'sip_creation' }); }
@@ -71,15 +73,24 @@ export default function SIPCreationModal({ isOpen, onClose }) {
     if (!success) {
       const completion = calculateFormCompletion(form, REQUIRED);
       if (completion > 0) queueEvent({ eventType: 'form_abandon', formType: 'sip_creation', metadata: { completion, filledFields: getFilledFields(form), step }, duration: Math.round((Date.now() - startTime.current) / 1000) });
+    } else if (onCreated && typeof onCreated === 'function') {
+      const fundData = mutualFunds.find(f => f.name === form.selectedFund);
+      const newSip = {
+        id: Date.now().toString(),
+        name: form.selectedFund,
+        category: fundData ? fundData.category : 'Mutual Fund',
+        date: form.sipDate,
+        amount: form.sipAmount,
+        returns: form.expectedReturn,
+        status: 'active'
+      };
+      onCreated(newSip);
     }
     setStep(0); setForm({ sipAmount: 5000, sipDate: '5', frequency: 'monthly', duration: 5, expectedReturn: 12, selectedFund: '', bankAccount: '', upiId: '', autoDebit: true });
     setErrors({}); setSuccess(false); onClose();
   };
 
   if (!isOpen) return null;
-
-  const selectedFundData = mutualFunds.find(f => f.name === form.selectedFund);
-  const fmt = n => `₹${n.toLocaleString('en-IN')}`;
 
   return (
     <AnimatePresence>

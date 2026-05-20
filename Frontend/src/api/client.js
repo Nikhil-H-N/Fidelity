@@ -49,15 +49,7 @@ apiClient.interceptors.response.use(
       // Only hard-redirect if user is on a PROTECTED page.
       // Never redirect if:
       //   1. Already on a public/auth page (prevents redirect loop)
-      //   2. The failing request was /auth/me (session restore — AuthContext handles this gracefully)
-      const currentPath = window.location.pathname;
-      const isPublicPage = PUBLIC_PATHS.some((p) => currentPath === p || currentPath.startsWith(p + "/"));
-      const isSessionRestore = error.config?.url?.includes("/auth/me");
-      const isAdminPreview = window.location.search.includes("adminPreview=true");
-
-      if (!isPublicPage && !isSessionRestore && !isAdminPreview) {
-        window.location.href = "/login";
-      }
+      window.dispatchEvent(new CustomEvent("finova:auth-expired"));
     }
     return Promise.reject(error);
   }

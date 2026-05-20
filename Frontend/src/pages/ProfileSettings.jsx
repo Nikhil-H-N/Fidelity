@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Shield, Bell, Lock, Save, Camera, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import { usePageTracking } from '../hooks/useTracking';
 import { useAuth } from '../context/AuthContext';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /** Get initials from fullName */
 function getInitials(name) {
@@ -22,9 +25,10 @@ function formatJoinDate(dateStr) {
 
 export default function ProfileSettings() {
   usePageTracking('profile-settings');
-  const { user } = useAuth();
+  const { user, setUser, token } = useAuth();
   const [tab, setTab] = useState('profile');
   const [form, setForm] = useState({ fullName: '', email: '', phone: '' });
+  const [saving, setSaving] = useState(false);
 
   // Populate form from auth user
   useEffect(() => {
@@ -43,10 +47,33 @@ export default function ProfileSettings() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    // TODO: wire to PUT /api/auth/profile when endpoint is ready
-    toast.success('Profile saved (local only — backend endpoint coming soon)');
+    if (!form.fullName.trim()) {
+      toast.error('Full name is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await axios.put(
+        `${API_URL}/users/profile`,
+        { fullName: form.fullName, phone: form.phone },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success && res.data.data?.user) {
+        // Update auth context so the header, sidebar etc. reflect new name instantly
+        setUser(res.data.data.user);
+        // Also update localStorage
+        localStorage.setItem('fw_user', JSON.stringify(res.data.data.user));
+        toast.success('Profile saved successfully!');
+      } else {
+        toast.error(res.data.message || 'Failed to save profile');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -83,7 +110,10 @@ export default function ProfileSettings() {
               <div><label className="block text-sm font-medium text-surface-700 mb-1.5">Phone</label><input type="tel" className="input-field" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div><label className="block text-sm font-medium text-surface-700 mb-1.5">Auth Provider</label><input type="text" className="input-field bg-surface-50" value={user?.authProvider === 'google' ? 'Google' : 'Email'} readOnly disabled /></div>
             </div>
-            <button type="submit" className="btn-primary mt-6 gap-2"><Save className="w-4 h-4" /> Save Changes</button>
+            <button type="submit" disabled={saving} className="btn-primary mt-6 gap-2">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
           </form>
         </div>
       )}
@@ -114,11 +144,11 @@ export default function ProfileSettings() {
 
       {tab === 'notifications' && (
         <div className="bg-white rounded-2xl p-6 shadow-card border border-surface-100 space-y-4">
-          {['SIP Reminders', 'Market Alerts', 'AI Recommendations', 'Transaction Updates', 'Goal Milestones', 'Weekly Reports'].map((n, i) => (
+          {['SIP Reminders', 'Market Alerts', 'Transaction Updates', 'Goal Milestones', 'Weekly Reports'].map((n, i) => (
             <div key={n} className="flex items-center justify-between p-4 bg-surface-50 rounded-xl">
               <div><p className="text-sm font-medium text-surface-900">{n}</p></div>
-              <div className={`w-12 h-6 rounded-full p-0.5 cursor-pointer ${i < 4 ? 'bg-accent-500' : 'bg-surface-300'}`}>
-                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-all ${i < 4 ? 'ml-auto' : ''}`} />
+              <div className={`w-12 h-6 rounded-full p-0.5 cursor-pointer ${i < 3 ? 'bg-accent-500' : 'bg-surface-300'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-all ${i < 3 ? 'ml-auto' : ''}`} />
               </div>
             </div>
           ))}

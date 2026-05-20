@@ -110,19 +110,6 @@ export default function InsurancePlans() {
         ))}
       </div>
 
-      <div className="bg-primary-600 rounded-[2rem] p-10 text-white relative overflow-hidden">
-        <Shield className="absolute -right-10 -bottom-10 w-64 h-64 text-white/10 -rotate-12" />
-        <div className="relative z-10 max-w-2xl">
-          <h2 className="text-3xl font-bold mb-4">Need Expert Advice?</h2>
-          <p className="text-primary-100 text-lg mb-8">
-            Our insurance specialists can help you calculate the right cover amount based 
-            on your lifestyle and financial goals.
-          </p>
-          <button onClick={contactAdvisor} className="px-8 py-4 bg-white text-primary-600 font-black rounded-2xl hover:scale-105 transition-transform shadow-xl shadow-primary-900/20">
-            Talk to an Advisor
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
