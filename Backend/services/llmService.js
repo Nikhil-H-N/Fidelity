@@ -1,7 +1,11 @@
+const Groq = require("groq-sdk");
+
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
+const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
+
 const hasOpenAI = () => Boolean(process.env.OPENAI_API_KEY);
-const hasGemini = () => Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+const hasGroq = () => Boolean(groq);
 
 const cleanJson = (text) => {
   const trimmed = String(text || "").trim();
@@ -35,46 +39,24 @@ async function callOpenAI(messages, options = {}) {
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function callGemini(prompt, options = {}) {
-  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  // Fallback chain: preferred → cheap/free models that have generous free-tier quotas
-  const preferred = process.env.GEMINI_MODEL || "gemini-2.0-flash-lite";
-  const models = [...new Set([preferred, "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-2.0-flash"])];
-  let lastError = "";
-
-  for (const model of models) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: options.temperature ?? 0.45,
-              maxOutputTokens: options.maxTokens || 500,
-              responseMimeType: options.json ? "application/json" : "text/plain",
-            },
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
-      }
-
-      lastError = `${response.status} ${(await response.text()).slice(0, 200)}`;
-      // On 429 (quota) or 404 (not found), try next model
-      if (response.status !== 429 && response.status !== 404) break;
-    } catch (err) {
-      lastError = err.message;
-      continue;
-    }
+async function callGroq(messages, options = {}) {
+  if (!groq) {
+    throw new Error("Groq API Key is not configured.");
   }
 
-  throw new Error(`Gemini request failed: ${lastError}`);
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: messages,
+      model: "llama-3.3-70b-versatile",
+      temperature: options.temperature ?? 0.45,
+      max_completion_tokens: options.maxTokens || 500,
+      response_format: options.json ? { type: "json_object" } : undefined,
+    });
+
+    return chatCompletion.choices?.[0]?.message?.content || "";
+  } catch (err) {
+    throw new Error(`Groq request failed: ${err.message}`);
+  }
 }
 
 async function generateChatReply({ prompt, context = {}, lastInteraction = null, history = [] }) {
@@ -106,24 +88,28 @@ async function generateChatReply({ prompt, context = {}, lastInteraction = null,
     ],
   };
 
+  const messages = [
+    { role: "system", content: system },
+    ...compactHistory,
+    { role: "user", content: JSON.stringify(userPayload) },
+  ];
+
   if (hasOpenAI()) {
-    const content = await callOpenAI(
-      [
-        { role: "system", content: system },
-        ...compactHistory,
-        { role: "user", content: JSON.stringify(userPayload) },
-      ],
-      { json: true, maxTokens: 450 }
-    );
-    return cleanJson(content);
+    try {
+      const content = await callOpenAI(messages, { json: true, maxTokens: 450 });
+      return cleanJson(content);
+    } catch (error) {
+      console.warn(`OpenAI failed, falling back to Groq if available: ${error.message}`);
+    }
   }
 
-  if (hasGemini()) {
-    const content = await callGemini(
-      `${system}\nConversation: ${JSON.stringify(compactHistory)}\nUser payload: ${JSON.stringify(userPayload)}`,
-      { json: true, maxTokens: 450 }
-    );
-    return cleanJson(content);
+  if (hasGroq()) {
+    try {
+      const content = await callGroq(messages, { json: true, maxTokens: 450 });
+      return cleanJson(content);
+    } catch (error) {
+      console.error(`Groq chat failed: ${error.message}`);
+    }
   }
 
   return null;
@@ -139,25 +125,25 @@ async function generatePopupCopy({ rule, reason, page, interests, fatigueScore, 
     "Do not guarantee returns. Be helpful, specific, and not pushy.",
   ].join(" ");
 
+  const messages = [
+    { role: "system", content: instruction },
+    { role: "user", content: JSON.stringify(payload) },
+  ];
+
   try {
     if (hasOpenAI()) {
-      return cleanJson(await callOpenAI(
-        [
-          { role: "system", content: instruction },
-          { role: "user", content: JSON.stringify(payload) },
-        ],
-        { json: true, maxTokens: 220 }
-      ));
-    }
-
-    if (hasGemini()) {
-      return cleanJson(await callGemini(`${instruction}\n${JSON.stringify(payload)}`, {
-        json: true,
-        maxTokens: 220,
-      }));
+      return cleanJson(await callOpenAI(messages, { json: true, maxTokens: 220 }));
     }
   } catch (error) {
-    console.warn(`LLM popup generation failed: ${error.message}`);
+    console.warn(`OpenAI popup generation failed: ${error.message}`);
+  }
+
+  try {
+    if (hasGroq()) {
+      return cleanJson(await callGroq(messages, { json: true, maxTokens: 220 }));
+    }
+  } catch (error) {
+    console.error(`Groq popup generation failed: ${error.message}`);
   }
 
   return fallback;
@@ -166,5 +152,5 @@ async function generatePopupCopy({ rule, reason, page, interests, fatigueScore, 
 module.exports = {
   generateChatReply,
   generatePopupCopy,
-  hasLLM: () => hasOpenAI() || hasGemini(),
+  hasLLM: () => hasOpenAI() || hasGroq(),
 };
