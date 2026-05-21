@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Bot,
@@ -183,7 +183,16 @@ export default function AIChatbot() {
   const [messages, setMessages] = useState([
     { role: 'assistant', text: 'Hi, I am Finova AI. I can guide plans, risk, and recovery nudges.' },
   ]);
+  const messagesEndRef = useRef(null);
   const location = useLocation();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
   const navigate = useNavigate();
   const context = useMemo(() => getContext(location.pathname), [location.pathname]);
 
@@ -353,6 +362,7 @@ export default function AIChatbot() {
                 )}
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="p-3 border-t border-surface-100 bg-white space-y-3">

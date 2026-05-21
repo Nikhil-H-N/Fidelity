@@ -140,12 +140,9 @@ export default function Confirmation() {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button onClick={handleExportPDF} className="flex-1 py-4 bg-surface-900 hover:bg-primary-600 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2">
+          <div className="pt-4">
+            <button onClick={handleExportPDF} className="w-full py-4 bg-surface-900 hover:bg-primary-600 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2">
               <Download className="w-4 h-4" /> Application PDF
-            </button>
-            <button className="flex-1 py-4 bg-surface-50 hover:bg-surface-100 text-surface-900 font-black rounded-2xl transition-all flex items-center justify-center gap-2">
-              <Share2 className="w-4 h-4" /> Share Progress
             </button>
           </div>
         </div>

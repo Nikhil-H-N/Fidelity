@@ -181,6 +181,7 @@ function AuthenticatedProviders() {
       <SocketProvider />
       <PopupContainer />
       <TargetedNotificationPoller />
+      <AIChatbot />
     </>
   );
 }
@@ -193,7 +194,6 @@ export default function App() {
         <AuthenticatedProviders />
         <AdminPreviewIframeBridge />
         <GlobalTracker />
-        <AIChatbot />
         {/* Global toast notifications */}
         <Toaster
           position="top-right"
