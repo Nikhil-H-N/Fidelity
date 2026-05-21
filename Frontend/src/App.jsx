@@ -117,7 +117,6 @@ const AIRecommendations = lazy(() => import('./pages/AIRecommendations'));
 const FAQ = lazy(() => import('./pages/FAQ'));
 const BeginnerGuides = lazy(() => import('./pages/BeginnerGuides'));
 const SuccessStories = lazy(() => import('./pages/SuccessStories'));
-const Notifications = lazy(() => import('./pages/Notifications'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const About = lazy(() => import('./pages/About'));
 const Blog = lazy(() => import('./pages/Blog'));
@@ -245,7 +244,6 @@ export default function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/beginner-guides" element={<BeginnerGuides />} />
               <Route path="/success-stories" element={<SuccessStories />} />
-              <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<ProfileSettings />} />
             </Route>
 

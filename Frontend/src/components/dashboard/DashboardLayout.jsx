@@ -32,7 +32,6 @@ const navItems = [
 
   { section: 'Other', items: [
     { name: 'Beginner Guides', icon: HelpCircle, path: '/beginner-guides' },
-    { name: 'Notifications', icon: Bell, path: '/notifications' },
     { name: 'Settings', icon: Settings, path: '/profile' },
   ]},
 ];
@@ -87,9 +86,6 @@ export default function DashboardLayout() {
                   className={({ isActive }) => isActive ? 'sidebar-link-active' : 'sidebar-link'}>
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   {sidebarOpen && <span className="text-sm truncate">{item.name}</span>}
-                  {item.name === 'Notifications' && unreadCount > 0 && sidebarOpen && (
-                    <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{unreadCount}</span>
-                  )}
                 </NavLink>
               ))}
             </div>
@@ -149,10 +145,6 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <NavLink to="/notifications" className="relative p-2 rounded-lg hover:bg-surface-50">
-              <Bell className="w-5 h-5 text-surface-500" />
-              {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />}
-            </NavLink>
             <NavLink to="/help" className="p-2 rounded-lg hover:bg-surface-50 hidden sm:flex"><HelpCircle className="w-5 h-5 text-surface-500" /></NavLink>
             <NavLink to="/profile" className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-surface-50">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-semibold text-xs">{initials}</div>
