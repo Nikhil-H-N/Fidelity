@@ -151,7 +151,7 @@ const getTriggerCTA = (rule) => {
     high_intent_abandoner: { cta: "Compare plans", ctaLink: "/plan-comparison" },
     likely_converter: { cta: "Continue investing", ctaLink: "/investment-plans" },
     form_abandon_nudge: { cta: "Finish application", ctaLink: "/checkout/wealth-core" },
-    comparison_without_conversion: { cta: "Get recommendation", ctaLink: "/ai-recommendations" },
+    comparison_without_conversion: { cta: "Compare plans", ctaLink: "/plan-comparison" },
     checkout_recovery: { cta: "Resume checkout", ctaLink: "/checkout/wealth-core" },
   };
   return ctas[rule] || { cta: "Explore options", ctaLink: "/plan-comparison" };
