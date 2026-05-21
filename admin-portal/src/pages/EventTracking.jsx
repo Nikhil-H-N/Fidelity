@@ -103,7 +103,7 @@ export default function EventTracking() {
 
   const counts = summary?.event_counts || {};
   const eventTypeData = CORE_EVENTS.map((event) => ({
-    type: event.label.replace('_', ' '),
+    type: event.label.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
     count: counts[event.type] || 0,
   }));
 
@@ -149,11 +149,11 @@ export default function EventTracking() {
           <h3 className="font-bold text-surface-900 mb-6 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-primary-500" /> Event Type Frequency
           </h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height={288}>
-              <BarChart data={eventTypeData}>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={eventTypeData} margin={{ bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                <XAxis dataKey="type" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#475569', fontWeight: 'bold' }} />
+                <XAxis dataKey="type" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#475569', fontWeight: 'bold' }} interval={0} angle={-45} textAnchor="end" height={80} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
                 <Tooltip
                   cursor={{ fill: 'rgba(26, 54, 235, 0.04)' }}
