@@ -45,7 +45,7 @@ const initialForm = {
   email: '',
   phone: '',
   pan: '',
-  amount: 5000,
+  amount: '',
   incomeRange: '',
   riskProfile: '',
   nominee: '',
@@ -190,8 +190,8 @@ export default function ApplicationForm() {
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
-      <div className="grid lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3 space-y-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="space-y-6">
           <div>
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-600 text-xs font-black uppercase tracking-widest">
               <FileText className="w-3.5 h-3.5" /> Application
@@ -241,7 +241,7 @@ export default function ApplicationForm() {
                     min={product.minimum}
                     className="input-field mt-2"
                     value={form.amount}
-                    onChange={(e) => updateField('amount', Number(e.target.value))}
+                    onChange={(e) => updateField('amount', e.target.value === '' ? '' : Number(e.target.value))}
                   />
                   <FieldError name="amount" />
                 </label>
@@ -297,45 +297,6 @@ export default function ApplicationForm() {
             </button>
           </form>
         </div>
-
-        <aside className="lg:col-span-2">
-          <div className="sticky top-24 bg-surface-900 text-white rounded-2xl p-8 shadow-xl space-y-8">
-            <div>
-              <p className="text-xs font-black text-primary-300 uppercase tracking-widest">{product.category}</p>
-              <h2 className="text-2xl font-black mt-2">Live Intent Capture</h2>
-              <p className="text-surface-400 mt-3 text-sm leading-relaxed">
-                This application emits form progress, validation errors, checkout recovery, and conversion events for the admin console.
-              </p>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm font-bold mb-2">
-                <span className="text-surface-400">Completion</span>
-                <span>{completion}%</span>
-              </div>
-              <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${completion}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                ['KYC-ready validation', BadgeCheck],
-                ['Silent abandonment detection', ShieldCheck],
-                ['Personalized recovery trigger', CheckCircle2],
-              ].map(([label, Icon]) => (
-                <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                  <Icon className="w-5 h-5 text-emerald-400" />
-                  <span className="text-sm font-bold text-surface-100">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
       </div>
     </div>
   );
